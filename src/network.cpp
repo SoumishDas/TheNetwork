@@ -72,9 +72,9 @@ class Layer{
             }
             
         }
-        double* calcOutput(double inputs[]){
+        vector<double> calcOutput(double inputs[]){
             //Dynamic array for storing weighted inputs after computation
-            double *weightedInputs = new double(numNodesOut);
+            vector<double> weightedInputs ;
 
             //For loop to iterate over the Outnodes and compute weighted inputs
             for (int nodeOut = 0; nodeOut < numNodesOut; nodeOut++)
@@ -87,7 +87,7 @@ class Layer{
                 {
                     weightedInput += inputs[nodeOut] * nodes[nodeOut].weights[nodeIn];
                 }
-                weightedInputs[nodeOut] = weightedInput;
+                weightedInputs.push_back(weightedInput);
 
 
             }
@@ -102,21 +102,21 @@ int main() {
 //   long double out =  input[0]*weight[0] + input[1]*weight[1] + input[2]*weight[2] + input[3]*weight[3] + input[4]*weight[4] + bias[0];
 
     // Setting random seed as current time
-    //srand (static_cast <unsigned> (time(0)));
+    srand (static_cast <unsigned> (time(0)));
 
-    const int hiddenLayers = 4;
+    const int hiddenLayers = 10;
 
     // Vars for testing
     Layer layer(3,hiddenLayers) ;
     double inp[3] = {2.5,2.5,1.5};
-    double *out = layer.calcOutput(inp);
+    vector<double> out = layer.calcOutput(inp);
 
     // Printing the result
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < hiddenLayers; i++)
     {
         cout << out[i]<< endl;
     }
 
-    delete [] out;
+    
     
 }
