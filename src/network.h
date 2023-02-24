@@ -13,7 +13,7 @@ using namespace std;
 
 //Classes
 class Node{
-    
+
     public:
 
         //Creating Vectors for weights and biases
@@ -126,22 +126,3 @@ class Neural_Net{
 
         }
 };
-
-
-//Main Function
-int main() {
-  
-//   long double out =  input[0]*weight[0] + input[1]*weight[1] + input[2]*weight[2] + input[3]*weight[3] + input[4]*weight[4] + bias[0];
-
-    // Setting random seed as current time
-    // srand (static_cast <unsigned> (time(0)));
-
-    
-    // double inp[3] = {2.5,2.5,1.5};
-    // vector<double> out = layer.calcOutput(inp);
-    
-    int a[3] = {2,3,2};
-
-    Neural_Net NN(a, sizeof(a)/sizeof(a[0]));
-    
-}
