@@ -37,7 +37,7 @@ class Layer{
         vector<Node> nodes;
         
         Layer(int NodesIn,int NodesOut);
-        vector<double> calcOutput(double inputs[]);
+        vector<double> calcOutput(vector<double> inputs);
 };
 
 class Neural_Net{
@@ -47,10 +47,12 @@ class Neural_Net{
         //Variables
         vector<Layer> layout;
         int inputSize;
-        int arraySize;
+        int numHiddenLayers;
         int outputSize;
 
         Neural_Net(vector<int> a);
+
+        vector<double> computeOutputsofNN(vector<double> inputs);
 };
 
 

@@ -6,8 +6,6 @@ using namespace std;
 
 
 
-
-
 Node::Node(int numNodeIn){
 
     //The Loop enters all the inputs and weights from the array into their respective vectors
@@ -48,7 +46,9 @@ Layer::Layer(int NodesIn,int NodesOut){
 }
 
 
-vector<double> Layer::calcOutput(double inputs[]){
+vector<double> Layer::calcOutput(vector<double> inputs){
+
+    cout<<inputs.size();
     //Dynamic array for storing weighted inputs after computation
     vector<double> weightedInputs ;
 
@@ -61,7 +61,7 @@ vector<double> Layer::calcOutput(double inputs[]){
         // Adding all the inputs multiplied with weights 
         for (int nodeIn = 0; nodeIn < numNodesIn; nodeIn++)
         {
-            weightedInput += inputs[nodeOut] * nodes[nodeOut].weights[nodeIn];
+            weightedInput += inputs[nodeIn] * nodes[nodeOut].weights[nodeIn];
         }
         weightedInputs.push_back(weightedInput);
 
@@ -75,15 +75,17 @@ vector<double> Layer::calcOutput(double inputs[]){
 Neural_Net::Neural_Net(vector<int> a){
 
     int S = a.size();
-    inputSize = a[0];
-    outputSize = a[S-1];
+
+    this->inputSize = a[0];
+    this->outputSize = a[S-1];
+    this->numHiddenLayers = S-2;
 
     for (int i = 0; i < S-1; i++)
     {
 
         //Creates a object of class Layer
         Layer L(a[i],a[i+1]);
-
+        cout<< L.numNodesIn<<"  --  "<<L.numNodesOut<<endl;
         //Adds the object in the vector
         layout.push_back(L);
 
@@ -105,7 +107,7 @@ Neural_Net::Neural_Net(vector<int> a){
 int main() {
   
     // Setting random seed as current time
-    // srand (static_cast <unsigned> (time(0)));
+    srand (static_cast <unsigned> (time(0)));
 
     
     // double inp[3] = {2.5,2.5,1.5};

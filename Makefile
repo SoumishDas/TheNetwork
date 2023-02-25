@@ -1,6 +1,7 @@
 CC = g++
 TARGET ?= a.out
 SRC_DIRS ?= ./src
+RM = rm
 
 SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
 OBJS := $(addsuffix .o,$(basename $(SRCS)))
@@ -20,5 +21,7 @@ clean:
 
 run: $(TARGET)
 	./a.out
+
+
 
 -include $(DEPS)
