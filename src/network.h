@@ -45,7 +45,7 @@ class Neural_Net{
     public:
 
         //Variables
-        vector<Layer> layout;
+        vector<Layer> layers;
         int inputSize;
         int numHiddenLayers;
         int outputSize;

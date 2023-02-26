@@ -87,7 +87,7 @@ Neural_Net::Neural_Net(vector<int> a){
         Layer L(a[i],a[i+1]);
         cout<< L.numNodesIn<<"  --  "<<L.numNodesOut<<endl;
         //Adds the object in the vector
-        layout.push_back(L);
+        this->layers.push_back(L);
 
 
     }
@@ -113,8 +113,8 @@ int main() {
     // double inp[3] = {2.5,2.5,1.5};
     // vector<double> out = layer.calcOutput(inp);
     
-    vector<int> a = {2000,30000,3000,3000,200};
-
+    vector<int> a = {2,3,3,3,2};
+    vector<double> inp = {2,3};
     Neural_Net NN(a);
-    
+    cout << Neural_Net.layers[0].calcOutput(inp);
 }
