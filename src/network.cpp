@@ -25,11 +25,19 @@ Node::Node(int numNodeIn){
 
 
 
+double basicActivationFunc(double weightedInput){
+    if weightedInput>0{
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
 
 Layer::Layer(int NodesIn,int NodesOut){
     this->numNodesIn = NodesIn;
     this->numNodesOut = NodesOut;
-
+    this->activationFunc = basicActivationFunc;
     //Creates and adds Nodes as per requirement
     for (int i = 0; i < numNodesOut; i++)
     {
@@ -63,7 +71,7 @@ vector<double> Layer::calcOutput(vector<double> inputs){
         {
             weightedInput += inputs[nodeIn] * nodes[nodeOut].weights[nodeIn];
         }
-        weightedInputs.push_back(weightedInput);
+        weightedInputs.push_back(activationFunc(weightedInput));
 
 
     }

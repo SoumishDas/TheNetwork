@@ -38,6 +38,7 @@ class Layer{
         
         Layer(int NodesIn,int NodesOut);
         vector<double> calcOutput(vector<double> inputs);
+        double (*activationFunc)(double weightedInput);
 };
 
 class Neural_Net{
