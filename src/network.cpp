@@ -116,7 +116,7 @@ int main() {
     vector<int> a = {2,3,3,3,2};
     vector<double> inp = {2,3};
     Neural_Net NN(a);
-    vector<double> out = Neural_Net.layers[0].calcOutput(inp);
+    vector<double> out = NN.layers[0].calcOutput(inp);
     for (int i =0;i<out.size();i++){
         cout << out[i];
     }
