@@ -101,7 +101,16 @@ Neural_Net::Neural_Net(vector<int> a){
 
 }
 
+vector<double> Neural_Net::computeOutputsofNN(vector<double> inputs){
 
+    vector<double>tempOut = inputs;
+
+    for (int layer=0;layer<layers.size();layer++){
+        tempOut = layers[layer].calcOutput(tempOut);
+    }
+
+    return tempOut;
+}
 
 //Main Function
 int main() {
@@ -116,8 +125,8 @@ int main() {
     vector<int> a = {2,3,3,3,2};
     vector<double> inp = {2,3};
     Neural_Net NN(a);
-    vector<double> out = NN.layers[0].calcOutput(inp);
+    vector<double> out = NN.computeOutputsofNN(inp);
     for (int i =0;i<out.size();i++){
-        cout << out[i];
+        cout << out[i] << endl;
     }
 }
