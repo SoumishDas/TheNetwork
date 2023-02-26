@@ -11,7 +11,7 @@ Node::Node(int numNodeIn){
     //The Loop enters all the inputs and weights from the array into their respective vectors
     for (int i = 0; i < numNodeIn; i++)
     {
-        double z = (double)(rand() % 100) /100;;
+        double z = -1+2*((double)rand())/RAND_MAX;
         //cout << z<<"##"<<endl;
         weights.push_back(z);
         
@@ -19,7 +19,7 @@ Node::Node(int numNodeIn){
     }
     
     //The bias value of a particular Node
-    biasN = (double)(rand() % 1000) /100;
+    biasN = -1+2*((double)rand())/RAND_MAX;
     //cout << biasN<<"#"<<endl;
 }
 
