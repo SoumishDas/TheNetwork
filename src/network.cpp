@@ -26,9 +26,9 @@ Node::Node(int numNodeIn){
 
 
 double basicActivationFunc(double weightedInput){
-    if weightedInput>0{
+    if (weightedInput>0){
         return 1;
-    }else{
+    } else {
         return 0;
     }
 }
