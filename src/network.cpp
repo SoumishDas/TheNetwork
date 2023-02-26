@@ -118,6 +118,6 @@ int main() {
     Neural_Net NN(a);
     vector<double> out = Neural_Net.layers[0].calcOutput(inp);
     for (int i =0;i<out.size();i++){
-        cout << out[i]
+        cout << out[i];
     }
 }
