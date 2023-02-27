@@ -1,7 +1,7 @@
 //Header Files
 #include "network.h"
-
-
+#include "activations.h"
+#include "helperFuncs.h"
 using namespace std;
 
 
@@ -11,7 +11,7 @@ Node::Node(int numNodeIn){
     //The Loop enters all the inputs and weights from the array into their respective vectors
     for (int i = 0; i < numNodeIn; i++)
     {
-        double z = -1+2*((double)rand())/RAND_MAX;
+        double z = getRandDoub(-1,1);
         //cout << z<<"##"<<endl;
         weights.push_back(z);
         
@@ -19,19 +19,13 @@ Node::Node(int numNodeIn){
     }
     
     //The bias value of a particular Node
-    biasN = -1+2*((double)rand())/RAND_MAX;
+    biasN = getRandDoub(-1,1);
     //cout << biasN<<"#"<<endl;
 }
 
 
 
-double basicActivationFunc(double weightedInput){
-    if (weightedInput>0){
-        return 1;
-    } else {
-        return 0;
-    }
-}
+
 
 
 Layer::Layer(int NodesIn,int NodesOut){

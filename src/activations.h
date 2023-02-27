@@ -1,0 +1,3 @@
+
+
+double basicActivationFunc(double weightedInput);
