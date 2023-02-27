@@ -1,4 +1,4 @@
-#include "activations.h>"
+#include "activations.h"
 
 double basicActivationFunc(double weightedInput){
     if (weightedInput>0){
