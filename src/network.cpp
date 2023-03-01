@@ -2,6 +2,8 @@
 #include "network.h"
 #include "activations.h"
 #include "helperFuncs.h"
+#include "dataPrep.h"
+
 using namespace std;
 
 
@@ -31,7 +33,7 @@ Node::Node(int numNodeIn){
 Layer::Layer(int NodesIn,int NodesOut){
     this->numNodesIn = NodesIn;
     this->numNodesOut = NodesOut;
-    this->activationFunc = basicActivationFunc;
+    this->activationFunc = TanHActFunc;
     //Creates and adds Nodes as per requirement
     for (int i = 0; i < numNodesOut; i++)
     {
@@ -50,7 +52,7 @@ Layer::Layer(int NodesIn,int NodesOut){
 
 vector<double> Layer::calcOutput(vector<double> inputs){
 
-    cout<<inputs.size();
+    
     //Dynamic array for storing weighted inputs after computation
     vector<double> weightedInputs ;
 
@@ -84,7 +86,7 @@ Neural_Net::Neural_Net(vector<int> a){
 
     for (int i = 0; i < S-1; i++)
     {
-
+        
         //Creates a object of class Layer
         Layer L(a[i],a[i+1]);
         cout<< L.numNodesIn<<"  --  "<<L.numNodesOut<<endl;
@@ -107,7 +109,7 @@ vector<double> Neural_Net::computeOutputsofNN(vector<double> inputs){
 
     vector<double>tempOut = inputs;
 
-    for (int layer=0;layer<layers.size();layer++){
+    for (int layer=0;layer<this->layers.size();layer++){
         tempOut = layers[layer].calcOutput(tempOut);
     }
 
@@ -131,4 +133,7 @@ int main() {
     for (int i =0;i<out.size();i++){
         cout << out[i] << endl;
     }
+
+    vector<vector<string>> csv = readCSV("Data/fake_bills.csv");
+    
 }
