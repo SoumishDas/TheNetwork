@@ -134,6 +134,9 @@ int main() {
         cout << out[i] << endl;
     }
 
-    vector<vector<string>> csv = readCSV("Data/fake_bills.csv");
-    
+    vector<vector<string>> y = readCSV("Data/fake_bills.csv");
+    vector<vector<string>> x_temp;
+    splitCsvVec(y,x_temp,1);
+    vector <vector<double>> x = convertTo2dDoubleVec(x_temp);
+    printCsvVecDoub(x);
 }
