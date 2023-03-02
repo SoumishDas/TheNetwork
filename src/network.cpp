@@ -123,20 +123,24 @@ int main() {
     srand (static_cast <unsigned> (time(0)));
 
     
-    // double inp[3] = {2.5,2.5,1.5};
-    // vector<double> out = layer.calcOutput(inp);
-    
-    vector<int> a = {2,3,3,3,2};
-    vector<double> inp = {2,3};
-    Neural_Net NN(a);
-    vector<double> out = NN.computeOutputsofNN(inp);
-    for (int i =0;i<out.size();i++){
-        cout << out[i] << endl;
-    }
-
     vector<vector<string>> y = readCSV("Data/fake_bills.csv");
     vector<vector<string>> x_temp;
     splitCsvVec(y,x_temp,1);
-    vector <vector<double>> x = convertTo2dDoubleVec(x_temp);
-    printCsvVecDoub(x);
+    vector<vector<string>> tem = {{"1.1","2.2"}};
+
+    vector<vector<double>> x = convertTo2dDoubleVec(x_temp);
+    //printCsvVecDoub(x);
+
+
+
+    vector<int> Size = {6,3,3,2};
+    
+    Neural_Net NN(Size);
+    // vector<double> out = NN.computeOutputsofNN(inp);
+    // for (int i =0;i<out.size();i++){
+    //     cout << out[i] << endl;
+    // }
+
+    
+    
 }
