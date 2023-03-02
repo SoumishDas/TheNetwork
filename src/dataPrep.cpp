@@ -75,8 +75,17 @@ void splitCsvVec(vector<vector<string>> &vec1,vector<vector<string>> &vec2,int n
 vector<double> convertStrVecToDoubVec(const vector<string>& stringVector){
     vector<double> doubleVector(stringVector.size());
     transform(stringVector.begin(), stringVector.end(), doubleVector.begin(), [](const string& val)
-                 {
-                     return stod(val);
+                 {try{
+						
+                    	double temp = stod(val);
+						
+						return temp;
+
+					}catch(...){
+						cout<<val<<"###ERROR"<<endl;
+						
+					}
+                    return stod(val);
                  });
     return doubleVector;
 }
