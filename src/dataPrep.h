@@ -20,4 +20,20 @@ void printCsvVecDoub(vector<vector<double>> csv);
 void splitCsvVec(vector<vector<string>> &vec1,vector<vector<string>> &vec2,int numColsToKeepInVec1);
 vector<vector<double>> convertTo2dDoubleVec(vector<vector<string>> csv);
 
+vector<vector<double>> calcExpectedOutputs(vector<vector<string>> inp){
+
+    vector<vector<double>> temp; 
+    for (int i = 0; i < inp.size(); i++)
+    {
+        if (inp[i][0] == "True"){
+            vector<double> t = {1,-1};
+            temp.push_back(t);
+        }else if(inp[i][0] == "False"){
+            vector<double> t = {-1,1};
+            temp.push_back(t);
+        }
+    }
+    return temp;
+}
+
 #endif

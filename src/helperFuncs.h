@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 
 double getRandDoub(double from,double to){

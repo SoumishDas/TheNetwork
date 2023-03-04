@@ -37,6 +37,7 @@ class Layer{
         Layer(int NodesIn,int NodesOut);
         vector<double> calcOutput(vector<double> inputs);
         double (*activationFunc)(double weightedInput);
+        double nodeCost(double outputActivation, double expectedOutput);
 };
 
 class Neural_Net{
@@ -52,8 +53,12 @@ class Neural_Net{
         Neural_Net(vector<int> a);
 
         vector<double> computeOutputsofNN(vector<double> inputs);
+        void saveNNtoFile(string filename);
 };
 
 
+
+double Loss(vector<double> input,vector<double> expectedOutput,Neural_Net NN);
+double TotalLoss(vector<vector<double>> inputs,vector<vector<double>> expectedOutputs,Neural_Net NN);
 
 #endif
