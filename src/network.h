@@ -3,6 +3,7 @@
 
 //Header Files
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <ctime>
 #include <array>
@@ -48,12 +49,14 @@ class Neural_Net{
         vector<Layer> layers;
         int inputSize;
         int numHiddenLayers;
+        vector<int> layerSizes;
         int outputSize;
 
         Neural_Net(vector<int> a);
 
         vector<double> computeOutputsofNN(vector<double> inputs);
-        void saveNNtoFile(string filename);
+        void saveNNtoFile(string fileName);
+        void loadNNfromFile(string fileName);
 };
 
 

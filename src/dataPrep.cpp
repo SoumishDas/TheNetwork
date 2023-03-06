@@ -17,10 +17,10 @@ vector<vector<string>> readCSV(string fname){
             
 			stringstream str(line);
             
-			while(getline(str, word, ';'))
+			while(getline(str, word, ';')){
 
 				row.push_back(word);
-
+			}
 			content.push_back(row);
 		}
 	}
@@ -97,4 +97,20 @@ vector<vector<double>> convertTo2dDoubleVec(vector<vector<string>> csv){
         csv2.push_back(convertStrVecToDoubVec(csv[i]));
     }
     return csv2;
+}
+
+vector<vector<double>> calcExpectedOutputs(vector<vector<string>> inp){
+
+    vector<vector<double>> temp; 
+    for (int i = 0; i < inp.size(); i++)
+    {
+        if (inp[i][0] == "True"){
+            vector<double> t = {1,-1};
+            temp.push_back(t);
+        }else if(inp[i][0] == "False"){
+            vector<double> t = {-1,1};
+            temp.push_back(t);
+        }
+    }
+    return temp;
 }
