@@ -14,7 +14,7 @@ Node::Node(int numNodeIn){
         double z = getRandDoub(-1,1);
         //cout << z<<"##"<<endl;
         weights.push_back(z);
-        
+        costGradientW.push_back(0.0);
         
     }
     
@@ -24,7 +24,7 @@ Node::Node(int numNodeIn){
 }
 
 
-Layer::Layer(int NodesIn,int NodesOut){
+Layer::Layer(const int NodesIn,const int NodesOut){
     this->numNodesIn = NodesIn;
     this->numNodesOut = NodesOut;
     this->activationFunc = TanHActFunc;
@@ -44,7 +44,7 @@ Layer::Layer(int NodesIn,int NodesOut){
 }
 
 
-vector<double> Layer::calcOutput(vector<double> inputs){
+vector<double> Layer::calcOutput(const vector<double> &inputs){
 
     
     //Dynamic array for storing weighted inputs after computation
@@ -69,8 +69,7 @@ vector<double> Layer::calcOutput(vector<double> inputs){
 }
 
 
-
-Neural_Net::Neural_Net(vector<int> a){
+Neural_Net::Neural_Net(const vector<int>& a){
 
     int S = a.size();
     this->layerSizes = a;
@@ -92,7 +91,7 @@ Neural_Net::Neural_Net(vector<int> a){
    
 }
 
-vector<double> Neural_Net::computeOutputsofNN(vector<double> inputs){
+vector<double> Neural_Net::computeOutputsofNN(const vector<double>& inputs){
 
     vector<double>tempOut = inputs;
 
@@ -104,24 +103,26 @@ vector<double> Neural_Net::computeOutputsofNN(vector<double> inputs){
 }
 
 
-double Layer::nodeCost(double outputActivation, double expectedOutput){
+double Node::nodeCost(const double outputActivation,const double expectedOutput){
     double e = outputActivation - expectedOutput;
     return e*e;
 }
 
-double Loss(vector<double> input,vector<double> expectedOutput,Neural_Net NN){
+double Loss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN){
     vector<double> output = NN.computeOutputsofNN(input);
     double cost = 0.0;
+
+    
     for (int i = 0; i < output.size(); i++)
     {
-        cost += NN.layers[NN.layers.size()-1].nodeCost(output[i],expectedOutput[i]);
+        cost += NN.layers[NN.layers.size()-1].nodes[i].nodeCost(output[i],expectedOutput[i]);
     }
 
     return cost;
     
 }
 
-double TotalLoss(vector<vector<double>> inputs,vector<vector<double>> expectedOutputs,Neural_Net NN){
+double TotalLoss(const vector<vector<double>>& inputs,const vector<vector<double>>& expectedOutputs, Neural_Net& NN){
 
     if(inputs.size() != expectedOutputs.size()){
         cout << "DIFFERENT NO OF INPUTS AND EXPECTED OUTPUTS";
@@ -130,13 +131,19 @@ double TotalLoss(vector<vector<double>> inputs,vector<vector<double>> expectedOu
 
     double totalLoss = 0.0;
 
+    //Added Multithreading using OpenMP
+    #pragma omp parallel for reduction(+:totalLoss)
     for(int i = 0; i < inputs.size(); i++)
     {
         totalLoss += Loss(inputs[i],expectedOutputs[i],NN);
     }
+
+
     return totalLoss / inputs.size();
 }
-void Neural_Net::saveNNtoFile(string fileName){
+
+
+void Neural_Net::saveNNtoFile(const string& fileName){
     // Create and open a text file
     ofstream file(fileName);
     
@@ -171,7 +178,7 @@ void Neural_Net::saveNNtoFile(string fileName){
 
 }
 
-void Neural_Net::loadNNfromFile(string fileName){
+void Neural_Net::loadNNfromFile(const string& fileName){
     //Initializing some vars
     ifstream file(fileName);
     string lineText;
@@ -250,10 +257,100 @@ void Neural_Net::loadNNfromFile(string fileName){
 
 }
 
+Neural_Net getBestNnRandom(const vector<int>& size,const vector<vector<double>>& x,const vector<vector<double>>& expected_y,int numTries){
+    Neural_Net BestNN(size);
+    double leastLoss = 10000.0;
+    
+    
+    for (int i = 0; i < numTries; i++)
+    {
+        Neural_Net NN(size);
+        double loss = TotalLoss(x,expected_y,NN);
+        if ( loss < leastLoss){
+            //cout << loss;
+            leastLoss = loss;
+            BestNN = NN; 
+        }
+        
+    }
+    return BestNN;
+}
+
+void Layer::applyGradients(const double &learnRate){
+
+    for (int nodeOut = 0; nodeOut < numNodesOut; nodeOut++)
+    {
+        // Updating Bias using Cost Gradient
+        nodes[nodeOut].biasN -= nodes[nodeOut].costGradientB * learnRate;
+
+        // Updating Weights using Cost Gradient 
+        for (int nodeIn = 0; nodeIn < numNodesIn; nodeIn++)
+        {
+            nodes[nodeOut].weights[nodeIn] -= nodes[nodeOut].costGradientW[nodeIn] * nodes[nodeOut].weights[nodeIn];
+        }        
+    }
+}
+
+void Neural_Net::applyAllGradients(const double& learnRate){
+    for (int layer = 0; layer < this->layers.size(); layer++)
+    {
+        this->layers[layer].applyGradients(learnRate);
+    }
+    
+}
+
+void Neural_Net::learn(const vector<vector<double>>& inputs,const vector<vector<double>>& expected_out,const double& learnRate){
+    const double h = 0.0001;
+    double originalCost = TotalLoss(inputs,expected_out,*this);
+
+    for (int layer = 0; layer < this->layers.size(); layer++)
+    {
+        for (int nodeIn = 0; nodeIn < this->layers[layer].numNodesIn; nodeIn++){
+            for (int nodeOut = 0; nodeOut < this->layers[layer].numNodesOut; nodeOut++)
+            {
+                this->layers[layer].nodes[nodeOut].weights[nodeIn] += h;
+                double deltaCost = TotalLoss(inputs,expected_out,*this) - originalCost;
+                this->layers[layer].nodes[nodeOut].weights[nodeIn] -= h;
+                this->layers[layer].nodes[nodeOut].costGradientW[nodeIn] = deltaCost / h;
+            }
+        }
+
+        for (int biasIndex = 0; biasIndex < this->layers[layer].nodes.size(); biasIndex++)
+        {
+            this->layers[layer].nodes[biasIndex].biasN += h;
+            double deltaCost = TotalLoss(inputs,expected_out,*this) - originalCost;
+            this->layers[layer].nodes[biasIndex].biasN -= h;
+            this->layers[layer].nodes[biasIndex].costGradientB = deltaCost / h;
+        }
+        
+    }
+    
+    this->applyAllGradients(learnRate);
+}
+
+void getBestNnGradientDescent(Neural_Net *NN,vector<vector<double>> x,vector<vector<double>> expected_y,int numTries,double learnRate){
+    
+    double loss ;
+    
+    
+    for (int i = 0; i < numTries; i++)
+    {
+        NN->learn(x,expected_y,learnRate);
+        loss = TotalLoss(x,expected_y,*NN);
+        cout << loss <<endl;
+        
+    }
+    
+}
+
+
 
 //Main Function
 int main() {
-  
+    
+    // Start measuring time
+    auto begin = std::chrono::high_resolution_clock::now();
+
     // Setting random seed as current time
     srand (static_cast <unsigned> (time(0)));
 
@@ -264,33 +361,24 @@ int main() {
     
 
     vector<vector<double>> x = convertTo2dDoubleVec(x_temp);
-    //printCsvVecDoub(x);
+    
 
     vector<vector<double>> expected_y = calcExpectedOutputs(y);
 
     vector<int> Size = {6,10,10,2};
     
-    Neural_Net BestNN(Size);
-    double leastLoss = 10000.0;
-    
-    
-    for (int i = 0; i < 500; i++)
-    {
-        Neural_Net NN(Size);
-        double loss = TotalLoss(x,expected_y,NN);
-        if ( loss < leastLoss){
-            //cout << loss;
-            leastLoss = loss;
-            BestNN = NN; 
-        }
         
-    }
-    
-    
-    cout << TotalLoss(x,expected_y,BestNN) << endl;
-    BestNN.saveNNtoFile("best.txt");
-    
     Neural_Net h(Size);
-    h.loadNNfromFile("best.txt");
-    cout << TotalLoss(x,expected_y,h);
+    //h = getBestNnRandom(Size,x,expected_y,10);
+    //h.loadNNfromFile("bestV1-1.42.txt");
+
+    getBestNnGradientDescent(&h,x,expected_y,5,0.14);
+    
+    //cout << MultiTotalLoss(x,expected_y,h);
+
+    // Stop measuring time and calculate the elapsed time
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+
+    cout <<"TIME:: "<<elapsed.count() * 1e-9;
 }

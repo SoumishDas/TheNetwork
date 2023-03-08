@@ -2,3 +2,4 @@
 /a.out
 /src/*.o
 *.txt
+/src/network

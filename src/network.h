@@ -7,7 +7,8 @@
 #include <vector>
 #include <ctime>
 #include <array>
-
+#include<thread>
+#include <chrono>
 using namespace std;
 
 
@@ -20,11 +21,14 @@ class Node{
 
         //Creating Vectors for weights and biases
         vector<double> weights;
-        
+        vector<double> costGradientW;
+
         double biasN;
+        double costGradientB;
 
         //Constructor
-        Node(int numNodeIn);
+        Node(const int numNodeIn);
+        double nodeCost(const double outputActivation,const double expectedOutput);
 };
 
 
@@ -35,10 +39,13 @@ class Layer{
         int numNodesIn,numNodesOut;
         vector<Node> nodes;
         
-        Layer(int NodesIn,int NodesOut);
-        vector<double> calcOutput(vector<double> inputs);
+        Layer(const int NodesIn,const int NodesOut);
+
+        vector<double> calcOutput(const vector<double> &inputs);
         double (*activationFunc)(double weightedInput);
-        double nodeCost(double outputActivation, double expectedOutput);
+
+        void applyGradients(const double &learnRate);
+        
 };
 
 class Neural_Net{
@@ -52,16 +59,19 @@ class Neural_Net{
         vector<int> layerSizes;
         int outputSize;
 
-        Neural_Net(vector<int> a);
+        Neural_Net(const vector<int>& a);
 
-        vector<double> computeOutputsofNN(vector<double> inputs);
-        void saveNNtoFile(string fileName);
-        void loadNNfromFile(string fileName);
+        vector<double> computeOutputsofNN(const vector<double>& inputs);
+        void saveNNtoFile(const string& fileName);
+        void loadNNfromFile(const string& fileName);
+
+        void applyAllGradients(const double& learnRate);
+        void learn(const vector<vector<double>>& inputs,const vector<vector<double>>& expected_out,const double& learnRate);
 };
 
+double Loss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN);
+double TotalLoss(const vector<vector<double>>& inputs,const vector<vector<double>>& expectedOutputs, Neural_Net& NN);
 
-
-double Loss(vector<double> input,vector<double> expectedOutput,Neural_Net NN);
-double TotalLoss(vector<vector<double>> inputs,vector<vector<double>> expectedOutputs,Neural_Net NN);
+Neural_Net getBestNnRandom(const vector<int>& size,const vector<vector<double>>& x,const vector<vector<double>>& expected_y,int numTries);
 
 #endif

@@ -1,6 +1,6 @@
 #include"dataPrep.h"
 
-vector<vector<string>> readCSV(string fname){
+vector<vector<string>> readCSV(const string& fname){
     
  
 	vector<vector<string>> content;
@@ -33,12 +33,12 @@ vector<vector<string>> readCSV(string fname){
     return content;
 }
 
-int lenCsvVec(vector<vector<string>> csv){
+int lenCsvVec(const vector<vector<string>>& csv){
     return csv[0].size();
 }
 
 
-void printCsvVecStr(vector<vector<string>> csv){
+void printCsvVecStr(const vector<vector<string>>& csv){
     for(int i=0;i<csv.size();i++)
 	{
 		for(int j=0;j<csv[i].size();j++)
@@ -49,7 +49,7 @@ void printCsvVecStr(vector<vector<string>> csv){
 	}
 }
 
-void printCsvVecDoub(vector<vector<double>> csv){
+void printCsvVecDoub(const vector<vector<double>>& csv){
     for(int i=0;i<csv.size();i++)
 	{
 		for(int j=0;j<csv[i].size();j++)
@@ -90,7 +90,7 @@ vector<double> convertStrVecToDoubVec(const vector<string>& stringVector){
     return doubleVector;
 }
 
-vector<vector<double>> convertTo2dDoubleVec(vector<vector<string>> csv){
+vector<vector<double>> convertTo2dDoubleVec(const vector<vector<string>>& csv){
     vector<vector<double>> csv2;
 
     for(int i=0;i<csv.size();i++){
@@ -99,7 +99,7 @@ vector<vector<double>> convertTo2dDoubleVec(vector<vector<string>> csv){
     return csv2;
 }
 
-vector<vector<double>> calcExpectedOutputs(vector<vector<string>> inp){
+vector<vector<double>> calcExpectedOutputs(const vector<vector<string>>& inp){
 
     vector<vector<double>> temp; 
     for (int i = 0; i < inp.size(); i++)

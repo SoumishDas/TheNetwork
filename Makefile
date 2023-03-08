@@ -10,10 +10,10 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CPPFLAGS ?= $(INC_FLAGS) 
+CPPFLAGS ?= $(INC_FLAGS) -fopenmp
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LOADLIBES) $(LDLIBS)
+	$(CC) $(CPPFLAGS) $(OBJS) -o $@ $(LOADLIBES) $(LDLIBS)
 
 .PHONY: clean
 clean:

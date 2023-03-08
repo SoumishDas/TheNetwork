@@ -10,16 +10,17 @@
 
 using namespace std;
 
-vector<vector<string>> readCSV(string fname);
+vector<vector<string>> readCSV(const string& fname);
 
 vector<double> convertStrVecToDoubVec(const vector<string>& stringVector);
 
-int lenCsvVec(vector<vector<string>> csv);
-void printCsvVecStr(vector<vector<string>> csv);
-void printCsvVecDoub(vector<vector<double>> csv);
+int lenCsvVec(const vector<vector<string>>& csv);
+void printCsvVecStr(const vector<vector<string>>& csv);
+void printCsvVecDoub(const vector<vector<double>>& csv);
 void splitCsvVec(vector<vector<string>> &vec1,vector<vector<string>> &vec2,int numColsToKeepInVec1);
-vector<vector<double>> convertTo2dDoubleVec(vector<vector<string>> csv);
 
-vector<vector<double>> calcExpectedOutputs(vector<vector<string>> inp);
+vector<vector<double>> convertTo2dDoubleVec(const vector<vector<string>>& csv);
+
+vector<vector<double>> calcExpectedOutputs(const vector<vector<string>>& inp);
 
 #endif
