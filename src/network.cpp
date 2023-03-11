@@ -3,8 +3,12 @@
 #include "activations.h"
 #include "helperFuncs.h"
 #include "dataPrep.h"
+#include "networkData.h"
 
-using namespace std;
+dataPoint::dataPoint(vector<double> inputs,vector<double> expected_outputs){
+    this->inputs = inputs;
+    this->expected_outputs = expected_outputs;
+}
 
 Node::Node(int numNodeIn){
 
@@ -66,6 +70,28 @@ vector<double> Layer::calcOutput(const vector<double> &inputs){
 
     }
     return weightedInputs;
+}
+
+vector<double> Layer::calcOutput(const vector<double> &inputs,layerLearnData& learnData ){
+
+    
+    //For loop to iterate over the Outnodes and compute weighted inputs
+    for (int nodeOut = 0; nodeOut < numNodesOut; nodeOut++)
+    {
+        // Adding Bias to the weighted input
+        double weightedInput = nodes[nodeOut].biasN;
+
+        // Adding all the inputs multiplied with weights 
+        for (int nodeIn = 0; nodeIn < numNodesIn; nodeIn++)
+        {
+            weightedInput += inputs[nodeIn] * nodes[nodeOut].weights[nodeIn];
+        }
+        learnData.weightedInputs.push_back(weightedInput);
+        learnData.activations.push_back(activationFunc(weightedInput));
+
+
+    }
+    return learnData.activations;
 }
 
 
@@ -299,7 +325,7 @@ void Neural_Net::applyAllGradients(const double& learnRate){
     
 }
 
-void Neural_Net::learn(const vector<vector<double>>& inputs,const vector<vector<double>>& expected_out,const double& learnRate){
+void Neural_Net::learnNoCalc(const vector<vector<double>>& inputs,const vector<vector<double>>& expected_out,const double& learnRate){
     const double h = 0.0001;
     double originalCost = TotalLoss(inputs,expected_out,*this);
 
@@ -335,7 +361,7 @@ void getBestNnGradientDescent(Neural_Net *NN,vector<vector<double>> x,vector<vec
     
     for (int i = 0; i < numTries; i++)
     {
-        NN->learn(x,expected_y,learnRate);
+        NN->learnNoCalc(x,expected_y,learnRate);
         loss = TotalLoss(x,expected_y,*NN);
         cout << loss <<endl;
         
@@ -345,40 +371,23 @@ void getBestNnGradientDescent(Neural_Net *NN,vector<vector<double>> x,vector<vec
 
 
 
-//Main Function
-int main() {
+// void Neural_Net::LearnCalc(vector<dataPoint> trainingData, double learnRate, double regularization = 0, double momentum = 0){
+//     if (this->batchLearnData.size() == 0 || this->batchLearnData.size() != trainingData.size())
+// 		{
+//             this->batchLearnData.clear();
+// 			this->batchLearnData.reserve(trainingData.size());
+// 			for (int i = 0; i < trainingData.size(); i++)
+// 			{
+//                 networkLearnData learnData(layers);
+// 				this->batchLearnData.push_back(learnData);
+// 			}
+// 		}
+
+//     // TBD IMPLEMENT MULTITHREADING
+
+//     // for (int i = 0; i < trainingData.size(); i++)
+//     // {
+//     //     //UpdateGradients(trainingData[i],batchLearnData[i]);
+//     // }
     
-    // Start measuring time
-    auto begin = std::chrono::high_resolution_clock::now();
-
-    // Setting random seed as current time
-    srand (static_cast <unsigned> (time(0)));
-
-    
-    vector<vector<string>> y = readCSV("Data/fake_bills.csv");
-    vector<vector<string>> x_temp;
-    splitCsvVec(y,x_temp,1);
-    
-
-    vector<vector<double>> x = convertTo2dDoubleVec(x_temp);
-    
-
-    vector<vector<double>> expected_y = calcExpectedOutputs(y);
-
-    vector<int> Size = {6,10,10,2};
-    
-        
-    Neural_Net h(Size);
-    //h = getBestNnRandom(Size,x,expected_y,10);
-    //h.loadNNfromFile("bestV1-1.42.txt");
-
-    getBestNnGradientDescent(&h,x,expected_y,5,0.14);
-    
-    //cout << MultiTotalLoss(x,expected_y,h);
-
-    // Stop measuring time and calculate the elapsed time
-    auto end = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-
-    cout <<"TIME:: "<<elapsed.count() * 1e-9;
-}
+// }
