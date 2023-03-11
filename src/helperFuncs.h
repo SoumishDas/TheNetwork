@@ -1,6 +1,6 @@
 #include <cstdlib>
 
-#define NUMTHREADS 6
+
 
 double getRandDoub(double from,double to){
     if (from>=0){

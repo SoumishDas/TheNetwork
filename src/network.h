@@ -6,11 +6,10 @@
 #include <fstream>
 #include <vector>
 #include <ctime>
-#include <array>
-#include<thread>
 #include <chrono>
 using namespace std;
 
+#include "networkData.h"
 
 class dataPoint{
     public:
@@ -21,7 +20,6 @@ class dataPoint{
         dataPoint(vector<double> inputs,vector<double> expected_outputs);
 };
 
-class networkLearnData;
 
 
 class Node{
@@ -31,13 +29,15 @@ class Node{
         //Creating Vectors for weights and biases
         vector<double> weights;
         vector<double> costGradientW;
+        vector<double> weightVelocities ;
+		
 
         double biasN;
         double costGradientB;
-
+        double biasVelocity;
         //Constructor
         Node(const int numNodeIn);
-        double nodeCost(const double outputActivation,const double expectedOutput);
+        
 };
 
 // Forward Declaration to resolve dependency; Actual declaration in networkData.h;
@@ -57,8 +57,17 @@ class Layer{
         double (*activationFunc)(double weightedInput);
 
         void applyGradients(const double &learnRate);
-        
+
+
+        // BackPropagation using Calculus
+        void CalculateOutputLayerNodeValues(layerLearnData &layerLearnData, vector<double> &expectedOutputs);
+        void CalculateHiddenLayerNodeValues(layerLearnData &layerLearnData, Layer &oldLayer, vector<double> &oldNodeValues);
+        void UpdateGradients(layerLearnData layerLearnData);
+        void ApplyGradientsCalc(double learnRate, double regularization, double momentum);
 };
+
+// Forward Declaration to resolve dependency; Actual declaration in networkData.h;
+class networkLearnData;
 
 class Neural_Net{
 
@@ -84,7 +93,8 @@ class Neural_Net{
 
 
         // BackPropagation using Calculus
-        void LearnCalc(vector<dataPoint> trainingData, double learnRate, double regularization = 0, double momentum = 0);
+        void LearnCalc(vector<dataPoint> &trainingData, double learnRate, double regularization, double momentum);
+        void UpdateGradientsCalc(dataPoint &data,networkLearnData &learnData);
 
         private:
 
@@ -99,4 +109,7 @@ Neural_Net getBestNnRandom(const vector<int>& size,const vector<vector<double>>&
 
 void getBestNnGradientDescent(Neural_Net *NN,vector<vector<double>> x,vector<vector<double>> expected_y,int numTries,double learnRate);
 
+double CostDerivative(double predictedOutput, double expectedOutput);
+
+double nodeCost(const double outputActivation,const double expectedOutput);
 #endif
