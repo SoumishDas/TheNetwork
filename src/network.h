@@ -11,6 +11,9 @@ using namespace std;
 
 #include "networkData.h"
 
+#define MINI_BATCH_SIZE 32
+#define LOGGING_INTERVAL 1
+
 class dataPoint{
     public:
 
@@ -93,7 +96,7 @@ class Neural_Net{
 
 
         // BackPropagation using Calculus
-        void LearnCalc(vector<dataPoint> &trainingData, double learnRate, double regularization, double momentum);
+        void LearnCalc(vector<dataPoint> &trainingData, double learnRate, double regularization, double momentum,int numEpochs,bool learnRateDecay);
         void UpdateGradientsCalc(dataPoint &data,networkLearnData &learnData);
 
         private:
@@ -102,14 +105,15 @@ class Neural_Net{
 
 };
 
-double Loss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN);
-double TotalLoss(const vector<vector<double>>& inputs,const vector<vector<double>>& expectedOutputs, Neural_Net& NN);
+double MeanSquaredLoss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN);
+double CrossEntropyLoss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN);
+double TotalLoss(const vector<dataPoint>& data, Neural_Net& NN);
 
 Neural_Net getBestNnRandom(const vector<int>& size,const vector<vector<double>>& x,const vector<vector<double>>& expected_y,int numTries);
 
 void getBestNnGradientDescent(Neural_Net *NN,vector<vector<double>> x,vector<vector<double>> expected_y,int numTries,double learnRate);
 
-double CostDerivative(double predictedOutput, double expectedOutput);
-
+double CrossEntropyCostDerivative(double predictedOutput, double expectedOutput);
+double MeanSquaredCostDerivative(double predictedOutput, double expectedOutput);
 double nodeCost(const double outputActivation,const double expectedOutput);
 #endif

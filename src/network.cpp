@@ -1,9 +1,9 @@
 //Header Files
+#include "networkData.h"
 #include "network.h"
 #include "activations.h"
 #include "helperFuncs.h"
 #include "dataPrep.h"
-
 
 
 dataPoint::dataPoint(vector<double> inputs,vector<double> expected_outputs){
@@ -16,7 +16,7 @@ Node::Node(int numNodeIn){
     //The Loop enters all the inputs and weights from the array into their respective vectors
     for (int i = 0; i < numNodeIn; i++)
     {
-        double z = getRandDoub(-1,1);
+        double z = getRandDoub(-1, 1) * sqrt(2.0 / numNodeIn); // Xavier initialization
         //cout << z<<"##"<<endl;
         this->weights.push_back(z);
         this->costGradientW.push_back(0.0);
@@ -25,7 +25,7 @@ Node::Node(int numNodeIn){
     }
     
     //The bias value of a particular Node
-    this->biasN = getRandDoub(-1,1);
+    this->biasN = getRandDoub(-2,2);
     this->biasVelocity = 0.0;
     //cout << biasN<<"#"<<endl;
 }
@@ -86,6 +86,7 @@ vector<double> Layer::calcOutput(const vector<double> &inputs,layerLearnData& le
         // Adding all the inputs multiplied with weights 
         for (int nodeIn = 0; nodeIn < numNodesIn; nodeIn++)
         {
+            
             weightedInput += inputs[nodeIn] * nodes[nodeOut].weights[nodeIn];
         }
         learnData.weightedInputs.push_back(weightedInput);
@@ -136,7 +137,9 @@ double nodeCost(const double outputActivation,const double expectedOutput){
     return e*e;
 }
 
-double Loss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN){
+
+
+double MeanSquaredLoss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN){
     vector<double> output = NN.computeOutputsofNN(input);
     double cost = 0.0;
 
@@ -150,25 +153,37 @@ double Loss(const vector<double>& input,const vector<double>& expectedOutput,Neu
     
 }
 
-double TotalLoss(const vector<vector<double>>& inputs,const vector<vector<double>>& expectedOutputs, Neural_Net& NN){
+double CrossEntropyLoss(const vector<double>& input,const vector<double>& expectedOutput,Neural_Net& NN){
+    vector<double> predictedOutputs = NN.computeOutputsofNN(input);
+    double cost = 0.0;
 
-    if(inputs.size() != expectedOutputs.size()){
-        cout << "DIFFERENT NO OF INPUTS AND EXPECTED OUTPUTS";
-        return 0;
+    
+    for (int i = 0; i < predictedOutputs.size(); i++)
+    {
+        double x = predictedOutputs[i];
+        double y = expectedOutput[i];
+        double v = (y == 1) ? -log(x) : -log(1 - x);
+        cost += isnan(v) ? 0 : v;
     }
 
+    return  cost;
+    
+}
+
+double TotalLoss(const vector<dataPoint>& data, Neural_Net& NN) {
     double totalLoss = 0.0;
 
-    //Added Multithreading using OpenMP
-    #pragma omp parallel for reduction(+:totalLoss)
-    for(int i = 0; i < inputs.size(); i++)
-    {
-        totalLoss += Loss(inputs[i],expectedOutputs[i],NN);
+    // Added Multithreading using OpenMP
+    
+    for (int i = 0; i < data.size(); i++) {
+        const vector<double>& input = data[i].inputs;
+        const vector<double>& expectedOutput = data[i].expected_outputs;
+        totalLoss += MeanSquaredLoss(input, expectedOutput, NN);
     }
 
-
-    return totalLoss / inputs.size();
+    return totalLoss / data.size();
 }
+
 
 
 void Neural_Net::saveNNtoFile(const string& fileName){
@@ -285,24 +300,24 @@ void Neural_Net::loadNNfromFile(const string& fileName){
 
 }
 
-Neural_Net getBestNnRandom(const vector<int>& size,const vector<vector<double>>& x,const vector<vector<double>>& expected_y,int numTries){
-    Neural_Net BestNN(size);
-    double leastLoss = 10000.0;
+// Neural_Net getBestNnRandom(const vector<int>& size,const vector<vector<double>>& x,const vector<vector<double>>& expected_y,int numTries){
+//     Neural_Net BestNN(size);
+//     double leastLoss = 10000.0;
     
     
-    for (int i = 0; i < numTries; i++)
-    {
-        Neural_Net NN(size);
-        double loss = TotalLoss(x,expected_y,NN);
-        if ( loss < leastLoss){
-            //cout << loss;
-            leastLoss = loss;
-            BestNN = NN; 
-        }
+//     for (int i = 0; i < numTries; i++)
+//     {
+//         Neural_Net NN(size);
+//         double loss = TotalLoss(x,expected_y,NN);
+//         if ( loss < leastLoss){
+//             //cout << loss;
+//             leastLoss = loss;
+//             BestNN = NN; 
+//         }
         
-    }
-    return BestNN;
-}
+//     }
+//     return BestNN;
+// }
 
 void Layer::applyGradients(const double &learnRate){
 
@@ -327,78 +342,104 @@ void Neural_Net::applyAllGradients(const double& learnRate){
     
 }
 
-void Neural_Net::learnNoCalc(const vector<vector<double>>& inputs,const vector<vector<double>>& expected_out,const double& learnRate){
-    const double h = 0.0001;
-    double originalCost = TotalLoss(inputs,expected_out,*this);
+// void Neural_Net::learnNoCalc(const vector<vector<double>>& inputs,const vector<vector<double>>& expected_out,const double& learnRate){
+//     const double h = 0.0001;
+//     double originalCost = TotalLoss(inputs,expected_out,*this);
 
-    for (int layer = 0; layer < this->layers.size(); layer++)
-    {
-        for (int nodeIn = 0; nodeIn < this->layers[layer].numNodesIn; nodeIn++){
-            for (int nodeOut = 0; nodeOut < this->layers[layer].numNodesOut; nodeOut++)
-            {
-                this->layers[layer].nodes[nodeOut].weights[nodeIn] += h;
-                double deltaCost = TotalLoss(inputs,expected_out,*this) - originalCost;
-                this->layers[layer].nodes[nodeOut].weights[nodeIn] -= h;
-                this->layers[layer].nodes[nodeOut].costGradientW[nodeIn] = deltaCost / h;
+//     for (int layer = 0; layer < this->layers.size(); layer++)
+//     {
+//         for (int nodeIn = 0; nodeIn < this->layers[layer].numNodesIn; nodeIn++){
+//             for (int nodeOut = 0; nodeOut < this->layers[layer].numNodesOut; nodeOut++)
+//             {
+//                 this->layers[layer].nodes[nodeOut].weights[nodeIn] += h;
+//                 double deltaCost = TotalLoss(inputs,expected_out,*this) - originalCost;
+//                 this->layers[layer].nodes[nodeOut].weights[nodeIn] -= h;
+//                 this->layers[layer].nodes[nodeOut].costGradientW[nodeIn] = deltaCost / h;
+//             }
+//         }
+
+//         for (int biasIndex = 0; biasIndex < this->layers[layer].nodes.size(); biasIndex++)
+//         {
+//             this->layers[layer].nodes[biasIndex].biasN += h;
+//             double deltaCost = TotalLoss(inputs,expected_out,*this) - originalCost;
+//             this->layers[layer].nodes[biasIndex].biasN -= h;
+//             this->layers[layer].nodes[biasIndex].costGradientB = deltaCost / h;
+//         }
+        
+//     }
+    
+//     this->applyAllGradients(learnRate);
+// }
+
+// void getBestNnGradientDescent(Neural_Net *NN,vector<vector<double>> x,vector<vector<double>> expected_y,int numTries,double learnRate){
+    
+//     double loss ;
+    
+    
+//     for (int i = 0; i < numTries; i++)
+//     {
+//         NN->learnNoCalc(x,expected_y,learnRate);
+//         loss = TotalLoss(x,expected_y,*NN);
+//         cout << loss <<endl;
+        
+//     }
+    
+// }
+
+
+
+// Inside Neural_Net class
+void Neural_Net::LearnCalc(vector<dataPoint> &trainingData, double learnRate, double regularization, double momentum, int numEpochs,bool learnRateDecay) {
+    if (this->batchLearnData.size() != trainingData.size()) {
+        this->batchLearnData.clear();
+        this->batchLearnData.reserve(trainingData.size());
+        for (int i = 0; i < trainingData.size(); i++) {
+            networkLearnData learnData(layers);
+            this->batchLearnData.push_back(learnData);
+        }
+    }
+
+    int miniBatchSize = MINI_BATCH_SIZE; // Set your desired mini-batch size
+    double epochDrop = 0.5;
+    double epochDropInterval = 10; // Set your desired interval
+    double prevLoss = TotalLoss(trainingData, *this); // Initialize previous loss
+
+    double currentLearnRate = learnRate;
+
+    for (int epoch = 0; epoch < numEpochs; epoch++) {
+        if (learnRateDecay){
+            currentLearnRate = learnRate * pow(epochDrop, epoch / epochDropInterval);
+        }
+        for (int batchStart = 0; batchStart < trainingData.size(); batchStart += miniBatchSize) {
+            int batchEnd = min(batchStart + miniBatchSize, static_cast<int>(trainingData.size()));
+            vector<dataPoint> miniBatch(trainingData.begin() + batchStart, trainingData.begin() + batchEnd);
+
+            for (int i = 0; i < miniBatch.size(); i++) {
+                if (i < this->batchLearnData.size()) {
+                    UpdateGradientsCalc(miniBatch[i], this->batchLearnData[i]);
+                }
+            }
+
+            for (int i = 0; i < this->layers.size(); i++) {
+                this->layers[i].ApplyGradientsCalc(currentLearnRate / miniBatch.size(), regularization, momentum);
             }
         }
 
-        for (int biasIndex = 0; biasIndex < this->layers[layer].nodes.size(); biasIndex++)
-        {
-            this->layers[layer].nodes[biasIndex].biasN += h;
-            double deltaCost = TotalLoss(inputs,expected_out,*this) - originalCost;
-            this->layers[layer].nodes[biasIndex].biasN -= h;
-            this->layers[layer].nodes[biasIndex].costGradientB = deltaCost / h;
+        if (epoch % LOGGING_INTERVAL == 0) {
+            double currentLoss = TotalLoss(trainingData, *this);
+            cout << "Epoch " << epoch << ", Loss: " << currentLoss;
+            if (currentLoss < prevLoss) {
+                cout << " (Decreased)" << endl;
+            } else if (currentLoss > prevLoss) {
+                cout << " (Increased)" << endl;
+            } else {
+                cout << " (No Change)" << endl;
+            }
+            prevLoss = currentLoss; // Update previous loss
         }
-        
     }
-    
-    this->applyAllGradients(learnRate);
 }
 
-void getBestNnGradientDescent(Neural_Net *NN,vector<vector<double>> x,vector<vector<double>> expected_y,int numTries,double learnRate){
-    
-    double loss ;
-    
-    
-    for (int i = 0; i < numTries; i++)
-    {
-        NN->learnNoCalc(x,expected_y,learnRate);
-        loss = TotalLoss(x,expected_y,*NN);
-        cout << loss <<endl;
-        
-    }
-    
-}
-
-
-
-void Neural_Net::LearnCalc(vector<dataPoint> &trainingData, double learnRate, double regularization = 0, double momentum = 0){
-    if (this->batchLearnData.size() == 0 || this->batchLearnData.size() != trainingData.size())
-		{
-            this->batchLearnData.clear();
-			this->batchLearnData.reserve(trainingData.size());
-			for (int i = 0; i < trainingData.size(); i++)
-			{
-                networkLearnData learnData(layers);
-				this->batchLearnData.push_back(learnData);
-			}
-		}
-
-    //MultiThreaded For loop for updating gradients
-    //#pragma omp parallel for
-    for (int i = 0; i < trainingData.size(); i++)
-    {
-        UpdateGradientsCalc(trainingData[i],batchLearnData[i]);
-    }
-    
-    // Update weights and biases based on the calculated gradients
-    for (int i = 0; i < this->layers.size(); i++)
-    {
-        layers[i].ApplyGradientsCalc(learnRate / trainingData.size(), regularization, momentum);
-    }
-    
-}
 
 void Neural_Net::UpdateGradientsCalc(dataPoint &data,networkLearnData &learnData){
     // Feed data through the network to calculate outputs.
@@ -413,7 +454,7 @@ void Neural_Net::UpdateGradientsCalc(dataPoint &data,networkLearnData &learnData
     // -- Backpropagation --
     int outputLayerIndex = this->layers.size() - 1;
     Layer &outputLayer = this->layers[outputLayerIndex];
-    layerLearnData outputLearnData = learnData.layerData[outputLayerIndex];
+    layerLearnData &outputLearnData = learnData.layerData[outputLayerIndex];
 
     // Update output layer gradients
     outputLayer.CalculateOutputLayerNodeValues(outputLearnData, data.expected_outputs);
@@ -422,8 +463,8 @@ void Neural_Net::UpdateGradientsCalc(dataPoint &data,networkLearnData &learnData
     // Update all hidden layer gradients
     for (int i = outputLayerIndex - 1; i >= 0; i--)
     {
-        layerLearnData layerLearnData = learnData.layerData[i];
-        Layer hiddenLayer = layers[i];
+        layerLearnData &layerLearnData = learnData.layerData[i];
+        Layer &hiddenLayer = layers[i];
 
         hiddenLayer.CalculateHiddenLayerNodeValues(layerLearnData, layers[i + 1], learnData.layerData[i + 1].nodeValues);
         hiddenLayer.UpdateGradients(layerLearnData);
@@ -440,7 +481,7 @@ void Layer::CalculateOutputLayerNodeValues(layerLearnData &layerLearnData, vecto
             
 
 			// Evaluate partial derivatives for current node: cost/activation & activation/weightedInput
-			double costDerivative = CostDerivative(layerLearnData.activations[i], expectedOutputs[i]);
+			double costDerivative = MeanSquaredCostDerivative(layerLearnData.activations[i], expectedOutputs[i]);
 			double activationDerivative = TanHActDerv(layerLearnData.weightedInputs[i]);
             double nodeValue = costDerivative * activationDerivative;
 			layerLearnData.nodeValues.push_back(nodeValue);
@@ -455,13 +496,23 @@ void Layer::CalculateHiddenLayerNodeValues(layerLearnData &layerLearnData, Layer
     for (int newNodeIndex = 0; newNodeIndex < this->numNodesOut; newNodeIndex++)
     {
         double newNodeValue = 0;
+        
         for (int oldNodeIndex = 0; oldNodeIndex < oldNodeValues.size(); oldNodeIndex++)
         {
             // Partial derivative of the weighted input with respect to the input
             double weightedInputDerivative = oldLayer.nodes.at(oldNodeIndex).weights.at(newNodeIndex);
             newNodeValue += weightedInputDerivative * oldNodeValues[oldNodeIndex];
+
+            //Debug
+            //cout << " NVBT:" << newNodeValue; 
         }
+        double temp = newNodeValue;
         newNodeValue *= TanHActDerv(layerLearnData.weightedInputs.at(newNodeIndex));
+
+        //debug
+        if(newNodeValue == 0){
+            cout << " NV:" << temp <<"   WI:" <<layerLearnData.weightedInputs.at(newNodeIndex) <<"   Derv:"<< TanHActDerv(layerLearnData.weightedInputs.at(newNodeIndex))<<endl;
+        } 
         layerLearnData.nodeValues.push_back(newNodeValue);
     }
 
@@ -474,7 +525,7 @@ void Layer::UpdateGradients(layerLearnData layerLearnData)
 	{
 		// Update cost gradient with respect to weights (lock for multithreading)
 		//lock (costGradientW)
-        #pragma omp critical
+        //#pragma omp critical
 		{
 			for (int nodeOut = 0; nodeOut < numNodesOut; nodeOut++)
 			{
@@ -487,13 +538,20 @@ void Layer::UpdateGradients(layerLearnData layerLearnData)
 					// Note: the derivative is being added to the array here because ultimately we want
 					// to calculate the average gradient across all the data in the training batch
                     this->nodes.at(nodeOut).costGradientW.at(nodeIn) += derivativeCostWrtWeight;
+                    
+
+                    //Debug
+                    if(derivativeCostWrtWeight==0 ){
+                        //cout <<"WEIGHT GRADIENT:0"<<"  I:"<<layerLearnData.inputs[nodeIn]<<"   NV:"<<nodeValue<<endl;
+                    }
+                    
 				}
 			}
 		}
 
 		// Update cost gradient with respect to biases (lock for multithreading)
 		//lock (costGradientB)
-        #pragma omp critical
+        //#pragma omp critical
 		{
 			for (int nodeOut = 0; nodeOut < numNodesOut; nodeOut++)
 			{
@@ -505,36 +563,50 @@ void Layer::UpdateGradients(layerLearnData layerLearnData)
 	}
 
 
-double CostDerivative(double predictedOutput, double expectedOutput)
+double MeanSquaredCostDerivative(double predictedOutput, double expectedOutput)
 {
     return predictedOutput - expectedOutput;
 }
 
+double CrossEntropyCostDerivative(double predictedOutput, double expectedOutput)
+{
+    double x = predictedOutput;
+    double y = expectedOutput;
+    if (x == 0 || x == 1)
+    {
+        return 0;
+    }
+    return (-x + y) / (x * (x - 1));
+}
+
 // Update weights and biases based on previously calculated gradients.
 	// Also resets the gradients to zero.
-void Layer::ApplyGradientsCalc(double learnRate, double regularization, double momentum)
-	{
-		double weightDecay = (1 - regularization * learnRate);
+// Inside Layer class
+void Layer::ApplyGradientsCalc(double learnRate, double regularization, double momentum) {
+    double epsilon = 1e-8;
+    double decay_rate = 0.9;
 
-        for (int nodeOut = 0; nodeOut < this->numNodesOut; nodeOut++)
-        {
-            for (int nodeIn = 0; nodeIn < this->numNodesIn; nodeIn++)
-            {
-                // Updating Weights
-                double weight = this->nodes.at(nodeOut).weights.at(nodeIn);
-                double velocity = this->nodes.at(nodeOut).weightVelocities.at(nodeIn) * momentum   -   this->nodes.at(nodeOut).costGradientW[nodeIn] * learnRate;
-                this->nodes.at(nodeOut).weightVelocities.at(nodeIn) = velocity;
-                this->nodes.at(nodeOut).weights.at(nodeIn) = weight * weightDecay + velocity;
-                this->nodes.at(nodeOut).costGradientW[nodeIn] = 0;
+    for (int nodeOut = 0; nodeOut < this->numNodesOut; nodeOut++) {
+        for (int nodeIn = 0; nodeIn < this->numNodesIn; nodeIn++) {
+            // Update weights with RMSProp
+            double gradient = this->nodes.at(nodeOut).costGradientW.at(nodeIn);
+            this->nodes.at(nodeOut).weightVelocities.at(nodeIn) =
+                decay_rate * this->nodes.at(nodeOut).weightVelocities.at(nodeIn) +
+                (1 - decay_rate) * gradient * gradient;
 
-                //Updating Biases
-                velocity = this->nodes.at(nodeOut).biasVelocity * momentum - this->nodes.at(nodeOut).costGradientB * learnRate;
-                this->nodes.at(nodeOut).biasVelocity = velocity;
-                this->nodes.at(nodeOut).biasN += velocity;
-                this->nodes.at(nodeOut).costGradientB = 0;
-            }
-            
+            double update = -learnRate * gradient / sqrt(this->nodes.at(nodeOut).weightVelocities.at(nodeIn) + epsilon);
+            this->nodes.at(nodeOut).weights.at(nodeIn) += update;
+            this->nodes.at(nodeOut).costGradientW.at(nodeIn) = 0; // Reset gradient
         }
-        
 
-	}
+        // Update biases
+        double gradientBias = this->nodes.at(nodeOut).costGradientB;
+        this->nodes.at(nodeOut).biasVelocity =
+            decay_rate * this->nodes.at(nodeOut).biasVelocity +
+            (1 - decay_rate) * gradientBias * gradientBias;
+
+        double updateBias = -learnRate * gradientBias / sqrt(this->nodes.at(nodeOut).biasVelocity + epsilon);
+        this->nodes.at(nodeOut).biasN += updateBias;
+        this->nodes.at(nodeOut).costGradientB = 0; // Reset gradient
+    }
+}

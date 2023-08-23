@@ -10,6 +10,28 @@
 
 using namespace std;
 
+class Batch
+{
+	public:
+    vector<dataPoint> data;
+
+	Batch(vector<dataPoint> data);
+	
+};
+
+class DataSetHelper{
+    public:
+
+    template <typename T>
+    void ShuffleArray(vector<T>& array);
+
+    void ShuffleBatches(vector<Batch> &batches);
+	vector<Batch> CreateMiniBatches(vector<dataPoint> &allData, int size, bool shuffle);
+
+    //TBD Split into training and validation data
+};
+
+
 vector<vector<string>> readCSV(const string& fname);
 
 vector<double> convertStrVecToDoubVec(const vector<string>& stringVector);
@@ -22,5 +44,8 @@ void splitCsvVec(vector<vector<string>> &vec1,vector<vector<string>> &vec2,int n
 vector<vector<double>> convertTo2dDoubleVec(const vector<vector<string>>& csv);
 
 vector<vector<double>> calcExpectedOutputs(const vector<vector<string>>& inp);
+
+
+
 
 #endif

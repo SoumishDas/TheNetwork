@@ -1,4 +1,55 @@
+#include "network.h"
 #include"dataPrep.h"
+#include "helperFuncs.h"
+
+Batch::Batch(vector<dataPoint> data)
+{
+    this->data = data;
+}
+
+template <typename T>
+void DataSetHelper::ShuffleArray(vector<T>& array){
+    int elementsRemainingToShuffle = array.size();
+    int randomIndex = 0;
+
+    while (elementsRemainingToShuffle > 1)
+    {
+        // Choose a random element from array
+        randomIndex = getRandInt(0, elementsRemainingToShuffle);
+        T chosenElement = array[randomIndex];
+
+        // Swap the randomly chosen element with the last unshuffled element in the array
+        elementsRemainingToShuffle--;
+        array[randomIndex] = array[elementsRemainingToShuffle];
+        array[elementsRemainingToShuffle] = chosenElement;
+    }
+}
+
+void DataSetHelper::ShuffleBatches(vector<Batch> &batches)
+{
+    ShuffleArray(batches);
+}
+
+vector<Batch> DataSetHelper::CreateMiniBatches(vector<dataPoint> &allData, int size, bool shuffle = true)
+	{
+		if (shuffle)
+		{
+			ShuffleArray(allData);
+		}
+
+		int numBatches = allData.size() / size;
+		vector<Batch> batches;
+		for (int i = 0; i < numBatches; i++)
+		{
+			vector<dataPoint> batchData;
+            dataPoint d({0},{0});
+            batchData.resize(size,d);
+            std::copy(allData.begin() + (i * size) ,allData.begin() + (i * size) +size, batchData.begin() );
+            Batch B(batchData);
+			batches.push_back(B);
+		}
+		return batches;
+	}
 
 vector<vector<string>> readCSV(const string& fname){
     
@@ -17,7 +68,7 @@ vector<vector<string>> readCSV(const string& fname){
             
 			stringstream str(line);
             
-			while(getline(str, word, ';')){
+			while(getline(str, word, ',')){
 
 				row.push_back(word);
 			}
